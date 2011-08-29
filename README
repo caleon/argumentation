@@ -1,0 +1,41 @@
+Utility gem, featuring helper methods used by some of my other gems.
+
+Functions:
+
+1) Custom handling or arguments:
+
+Allows things like User.with_arguments(1, 2, 3).find(:order => 'id DESC')
+   result: => User.find(1, 2, 3, :order => 'id DESC')
+but also checks to see that arguments are valid.
+
+2) Also, allows us to condense patterns like:  record.perform_action! if record.respond_to?(:perform_action!)
+by doing the following instead              record.maybe.perform_action!
+
+3) Example of how it is used in my Quarters library:
+
+class Quarters < Range
+
+	def all(*args)
+	  type, year = type_and_year_from_args(*args)
+		...
+	end
+
+	# ARGUMENTS MUST NOT BE SPLATTED INTO THIS. Point is for this method to not be destructive.
+  # Also, whatever `type` is defined within normal list of arguments overrides any written as a hash value.
+  # Thing about this whole file is that `type` is the only argument ever that's a symbol,
+  #                                     `year` is the only argument that's ever a Numeric of length == 4,
+  #                                   `number` is the only argument that's ever a Numeric of length < 4.
+  def type_from_args(*args)
+    find_from_args(args, :quey => :type, :class => Symbol)
+  end
+  
+  def year_from_args(*args)
+    find_from_args(args, :quey => :year, :class => Numeric, :condition => ".to_s.size == 4")
+  end
+  
+  def number_from_args(*args)
+    find_from_args(args, :quey => :number, :class => Numeric, :condition => ".to_s.size < 3")
+  end
+end
+
+Note the line: "type, year = type_and_year_from_args(*args)". This is understood by Argumentation to refer to two types of arguments which it will attempt to grab according to the parameters defined by that specific class.
